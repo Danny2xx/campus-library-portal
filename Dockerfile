@@ -1,19 +1,22 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm-alpine
 
-# Fix MPM conflict: remove ALL mpm symlinks then only enable prefork
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.conf \
-           /etc/apache2/mods-enabled/mpm_*.load \
-    && ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf \
-    && ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load \
-    && a2enmod rewrite
+# Install nginx and supervisor (to run both services)
+RUN apk add --no-cache nginx supervisor
 
 # Install PDO MySQL extension
 RUN docker-php-ext-install pdo pdo_mysql
 
+# Copy nginx and supervisor config
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Copy application files
 COPY . /var/www/html/
 
-# Set correct permissions
-RUN chown -R www-data:www-data /var/www/html
+# Create nginx run dir and fix permissions
+RUN mkdir -p /run/nginx \
+    && chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
