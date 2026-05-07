@@ -1,0 +1,16 @@
+# Environment
+.env
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor directories
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Assessment / university documents (not for public repos)
+*.pdf
